@@ -1,69 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Habit - Habit Tracker</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Habit - Habit Tracker</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Daily Streaks 🔥</h1>
-        <h2>Add Your Habit</h2>
-        
-        <input type="text" id="habitInput" placeholder="Enter a habit..." required>
-        <button onclick="addHabit()">Create Habit</button>
+  <div class="container">
+    <h1>Daily Streaks 🔥</h1>
+    <h2>Add Your Habit</h2>
 
-        <h3>Your Habits:</h3>
-        <ul id="habitList"></ul>
+    <input type="text" id="habitInput" placeholder="Enter a habit..." required />
+    <button onclick="addHabit()">Create Habit</button>
 
-        <footer>Reuben Cherian</footer>
-    </div>
+    <footer>Reuben Cherian</footer>
+  </div>
 
-    <script>
-        // Function to fetch and display habits
-        async function fetchHabits() {
-            const response = await fetch("http://localhost:5000/habits");
-            const habits = await response.json();
-            const habitList = document.getElementById("habitList");
-            habitList.innerHTML = "";
-            
-            habits.forEach((habit, index) => {
-                const li = document.createElement("li");
-                li.innerHTML = `<strong>${index + 1}. ${habit.name}</strong> 
-                <button onclick="removeHabit('${habit._id}')">Remove</button>`;
-                habitList.appendChild(li);
-            });
+  <script>
+    async function addHabit() {
+      const habitName = document.getElementById("habitInput").value.trim();
+      if (!habitName) {
+        alert("Please enter a habit!");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:5000/habits/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: habitName })
+        });
+
+        const data = await response.json();
+
+        if (data.message) {
+          // Optionally alert: alert(data.message);
+          // Redirect to weekly view
+          window.location.href = "weekly-view.html";
+        } else {
+          alert("Something went wrong. Try again!");
         }
 
-        // Function to add a new habit
-        async function addHabit() {
-            const habitName = document.getElementById("habitInput").value;
-            if (!habitName) {
-                alert("Please enter a habit!");
-                return;
-            }
-
-            const response = await fetch("http://localhost:5000/habits/add", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: habitName }),
-            });
-
-            const data = await response.json();
-            alert(data.message);
-            document.getElementById("habitInput").value = "";
-            fetchHabits(); // Refresh habit list
-        }
-
-        // Function to remove a habit
-        async function removeHabit(habitId) {
-            await fetch(`http://localhost:5000/habits/delete/${habitId}`, { method: "DELETE" });
-            fetchHabits(); // Refresh habit list
-        }
-
-        // Load habits on page load
-        window.onload = fetchHabits;
-    </script>
+      } catch (err) {
+        console.error("Error adding habit:", err);
+        alert("Server error!");
+      }
+    }
+  </script>
 </body>
 </html>

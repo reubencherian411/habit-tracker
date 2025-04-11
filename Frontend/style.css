@@ -11,23 +11,25 @@ body {
   background: url('background.jpg') no-repeat center center/cover;
   height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
-/* Centered Box */
+/* Main Container */
 .container {
   background: rgba(0, 174, 255, 0.8); /* Semi-transparent blue */
   padding: 30px;
   text-align: center;
   border-radius: 10px;
-  width: 60%;
+  width: 80%;
 }
 
-/* Heading */
+/* Heading Styles */
 h1, h2 {
   color: white;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  padding-bottom: 10px;
 }
 
 /* Input Fields */
@@ -40,7 +42,7 @@ input {
   font-size: 16px;
 }
 
-/* Button */
+/* Button Styling */
 button {
   background: red;
   color: white;
@@ -56,7 +58,7 @@ button:hover {
   background: darkred;
 }
 
-/* Link */
+/* Links */
 p {
   color: white;
   margin-top: 10px;
@@ -76,4 +78,96 @@ footer {
   margin-top: 15px;
   color: white;
   font-weight: bold;
+}
+
+/* Weekly Habit Tracker Table */
+.table-container {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 900px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 10px;
+  border: 1px solid #bdc3c7;
+  text-align: center;
+  font-size: 16px;
+}
+
+th {
+  background-color: #3498db;
+  color: white;
+}
+
+td select {
+  padding: 5px;
+  border: none;
+  background-color: #bdc3c7;
+  cursor: pointer;
+  font-size: 14px;
+  width: 100%;
+}
+
+td select:focus {
+  outline: none;
+}
+
+.done {
+  background-color: #2ecc71 !important;
+  color: white;
+}
+
+.not-done {
+  background-color: #e74c3c !important;
+  color: white;
+}
+
+.none {
+  background-color: #bdc3c7 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    width: 90%;
+  }
+
+  table {
+    font-size: 14px;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+
+  td select {
+    font-size: 12px;
+  }
+}
+
+/* Progress Bar Styles */
+#progress-bar-container {
+  width: 100%;
+  height: 25px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+#progress-bar-fill {
+  height: 100%;
+  width: 0;
+  background-color: #4caf50;
+  transition: width 0.5s ease-in-out;
 }

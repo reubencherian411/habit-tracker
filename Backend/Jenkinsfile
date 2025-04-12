@@ -19,25 +19,24 @@ pipeline {
                     if (nodeVersion.contains("not found")) {
                         error("Node.js is not installed. Please install Node.js 18 on the Jenkins agent.")
                     }
-                    echo "Using Node.js version: ${nodeVersion}"
+                    echo "Using ${nodeVersion}"
                 }
             }
         }
 
         stage('Install Dependencies') {
-    steps {
-        dir('backend') {
-            sh 'npm install'
-        }
-    }
-}
-
-
-        stage('Run App') {
             steps {
-                script {
-                    sh 'nohup node server.js > output.log 2>&1 &'
-                }
+                // Run npm install in the root directory
+                sh '''
+                    ls -la  # Check current directory
+                    npm install
+                '''
+            }
+        }
+
+        stage('Run Application') {
+            steps {
+                sh 'node app.js &'
             }
         }
     }
@@ -45,13 +44,13 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            sh 'pkill -f node || true'
+            sh '''
+                pkill -f node || true
+            '''
         }
-
         success {
             echo 'Pipeline completed successfully! ✅'
         }
-
         failure {
             echo 'Pipeline failed ❌'
         }

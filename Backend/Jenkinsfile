@@ -1,17 +1,12 @@
 pipeline {
     agent {
         docker {
-            image 'node:18'
+            image 'node:18'  // You can also use a custom image with both node + docker
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
 
     stages {
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
@@ -20,7 +15,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh 'npm test || true'  // Skip if no tests yet
+                sh 'npm test || true'
             }
         }
 
@@ -38,11 +33,11 @@ pipeline {
     }
 
     post {
-        failure {
-            echo 'Pipeline failed 😢'
-        }
         success {
-            echo 'Pipeline succeeded 🎉'
+            echo 'Pipeline completed successfully 🎉'
+        }
+        failure {
+            echo 'Pipeline failed 💥'
         }
     }
 }

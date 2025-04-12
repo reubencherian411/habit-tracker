@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'habit-tracker'
+        CONTAINER_NAME = 'habit-tracker-container'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Node.js') {
+            steps {
+                sh 'curl -fsSL https://deb.nodesource.com/setup_18.x | bash -'
+                sh 'apt-get install -y nodejs'
+                sh 'node -v'
+                sh 'npm -v'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                // If you have tests, run them here. Else skip.
+                echo 'No tests added yet.'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $DOCKER_IMAGE .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                sh 'docker stop $CONTAINER_NAME || true'
+                sh 'docker rm $CONTAINER_NAME || true'
+                sh 'docker run -d -p 3000:3000 --name $CONTAINER_NAME $DOCKER_IMAGE'
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo 'Pipeline failed 😢'
+        }
+        success {
+            echo 'Pipeline completed successfully ✅'
+        }
+    }
+}

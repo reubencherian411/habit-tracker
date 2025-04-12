@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        PATH = "${env.PATH}:/usr/bin"
+        PATH = "${env.PATH}:/usr/local/bin"
     }
 
     stages {
@@ -17,7 +17,7 @@ pipeline {
                 script {
                     def nodeVersion = sh(script: 'node -v || echo "Node.js not found"', returnStdout: true).trim()
                     if (nodeVersion.contains("not found")) {
-                        error("Node.js is not installed on the Jenkins agent.")
+                        error("Node.js is not installed. Please install Node.js 18 on the Jenkins agent.")
                     }
                     echo "Using Node.js version: ${nodeVersion}"
                 }
@@ -26,35 +26,33 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                script {
+                    sh 'npm install'
+                }
             }
         }
 
         stage('Run App') {
-    steps {
-        script {
-            try {
-                sh 'nohup node server.js > output.log 2>&1 &'
-            } catch (e) {
-                error "App failed to start. Check logs."
+            steps {
+                script {
+                    sh 'nohup node server.js > output.log 2>&1 &'
+                }
             }
         }
     }
-}
-
 
     post {
         always {
             echo 'Cleaning up...'
-            sh 'pkill -f "node app.js" || true'
+            sh 'pkill -f node || true'
         }
 
         success {
-            echo '✅ Build completed successfully!'
+            echo 'Pipeline completed successfully! ✅'
         }
 
         failure {
-            echo '❌ Build failed.'
+            echo 'Pipeline failed ❌'
         }
     }
 }

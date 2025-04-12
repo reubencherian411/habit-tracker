@@ -31,11 +31,17 @@ pipeline {
         }
 
         stage('Run App') {
-            steps {
-                sh 'nohup node app.js &'
+    steps {
+        script {
+            try {
+                sh 'nohup node server.js > output.log 2>&1 &'
+            } catch (e) {
+                error "App failed to start. Check logs."
             }
         }
     }
+}
+
 
     post {
         always {

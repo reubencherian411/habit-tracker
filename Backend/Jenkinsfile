@@ -17,7 +17,7 @@ pipeline {
                 script {
                     def nodeVersion = sh(script: 'node -v || echo "Node.js not found"', returnStdout: true).trim()
                     if (nodeVersion.contains("not found")) {
-                        error("Node.js is not installed. Please install Node.js 18 on the Jenkins agent.")
+                        error("Node.js is not installed. Please install Node.js on the Jenkins agent.")
                     }
                     echo "Using ${nodeVersion}"
                 }
@@ -26,17 +26,21 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                // Run npm install in the root directory
-                sh '''
-                    ls -la  # Check current directory
-                    npm install
-                '''
+                dir('Backend') { // Make sure this is the exact folder name where package.json exists
+                    sh '''
+                        echo "Current directory: $(pwd)"
+                        ls -la
+                        npm install
+                    '''
+                }
             }
         }
 
         stage('Run Application') {
             steps {
-                sh 'node app.js &'
+                dir('Backend') {
+                    sh 'node app.js &'
+                }
             }
         }
     }

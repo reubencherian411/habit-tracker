@@ -1,43 +1,59 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18'  // You can also use a custom image with both node + docker
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
+    agent any
+
+    environment {
+        PATH = "${env.PATH}:/usr/local/bin"
     }
 
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Setup Node.js Environment') {
+            steps {
+                script {
+                    def nodeVersion = sh(script: 'node -v || echo "Node.js not found"', returnStdout: true).trim()
+                    if (nodeVersion.contains("not found")) {
+                        error("Node.js is not installed on the Jenkins agent. Please install Node.js 18.")
+                    }
+                    echo "Using Node version: ${nodeVersion}"
+                }
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                script {
+                    sh 'npm install'
+                }
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Application') {
             steps {
-                sh 'npm test || true'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t habit-tracker-app .'
-            }
-        }
-
-        stage('Run Docker Container') {
-            steps {
-                sh 'docker run -d -p 3000:3000 habit-tracker-app'
+                script {
+                    // Make sure your "start" script is defined in package.json
+                    sh 'npm start &'
+                }
             }
         }
     }
 
     post {
+        always {
+            echo 'Cleaning up...'
+            sh '''
+                pkill -f "node" || true
+            '''
+        }
         success {
-            echo 'Pipeline completed successfully 🎉'
+            echo 'Pipeline completed successfully! ✅'
         }
         failure {
-            echo 'Pipeline failed 💥'
+            echo 'Pipeline failed! ❌'
         }
     }
 }

@@ -8,7 +8,7 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f7f9;
+      background-color: #becad3;
       color: #333;
     }
 
@@ -59,7 +59,7 @@
     }
 
     .done-btn {
-      background-color: #2ecc71;
+      background-color: #f8f6f5;
     }
 
     .done-btn:hover {
@@ -67,11 +67,11 @@
     }
 
     .not-done-btn {
-      background-color: #fcf8f7;
+      background-color: #f8f6f5;
     }
 
     .not-done-btn:hover {
-      background-color: #bb635a;
+      background-color: #27ae60;
     }
 
     .delete-btn {
@@ -97,6 +97,15 @@
 
     .progress-btn:hover {
       background-color: #c0392b;
+    }
+
+    .favorite-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: gray;
+      padding-left: 10px;
     }
 
     @media screen and (max-width: 768px) {
@@ -150,107 +159,201 @@
   <button class="progress-btn" onclick="location.href='progress.html'">View Progress Summary</button>
 
   <script>
+    
     const tableBody = document.querySelector('#habit-table tbody');
 
-    async function fetchHabits() {
-      try {
-        const res = await fetch("http://localhost:5000/habits");
-        const data = await res.json();
-        renderHabits(data);
-      } catch (error) {
-        console.error('Error fetching habits:', error);
-      }
+async function fetchHabits() {
+  const auth = JSON.parse(localStorage.getItem('auth'));
+  
+  if (!auth?.userId) {
+    alert("Please login first");
+    window.location.href = "login.html";
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:5000/habits?userId=${auth.userId}`);
+    if (!response.ok) throw new Error('Failed to fetch habits');
+    const data = await response.json();
+    renderHabits(data);
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Failed to load habits. Please try again.");
+  }
+}
+
+function renderHabits(habits) {
+  tableBody.innerHTML = "";
+
+  habits.forEach(habit => {
+    const row = document.createElement("tr");
+
+    // Habit Name Cell with Favorite Button
+    const nameCell = document.createElement("td");
+    nameCell.innerHTML = `
+      <span class="habit-name">${habit.name}</span>
+      <button class="favorite-btn" data-id="${habit._id}" style="color: ${habit.isFavorite ? 'gold' : 'gray'}">
+        ${habit.isFavorite ? '★' : '☆'}
+      </button>
+    `;
+    row.appendChild(nameCell);
+
+    // Day Cells
+    for (let day = 0; day < 7; day++) {
+      const cell = document.createElement("td");
+      cell.setAttribute("data-label", getDayName(day));
+
+      const btnGroup = document.createElement("div");
+      btnGroup.className = "action-btns";
+
+      // Check if this day is marked as done
+      const isDone = habit.progress && habit.progress[day] === true;
+
+      // Done Button
+      const doneBtn = document.createElement("button");
+      doneBtn.textContent = "✔️";
+      doneBtn.className = `done-btn ${isDone ? 'active' : ''}`;
+      doneBtn.onclick = () => updateProgress(habit._id, day, true);
+
+      // Not Done Button
+      const notDoneBtn = document.createElement("button");
+      notDoneBtn.textContent = "❌";
+      notDoneBtn.className = `not-done-btn ${!isDone && habit.progress && habit.progress[day] === false ? 'active' : ''}`;
+      notDoneBtn.onclick = () => updateProgress(habit._id, day, false);
+
+      btnGroup.appendChild(doneBtn);
+      btnGroup.appendChild(notDoneBtn);
+      cell.appendChild(btnGroup);
+      row.appendChild(cell);
     }
 
-    function renderHabits(habits) {
-      tableBody.innerHTML = "";
+    // Delete Button Cell
+    const deleteCell = document.createElement("td");
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "🗑️";
+    deleteBtn.className = "delete-btn";
+    deleteBtn.onclick = () => deleteHabit(habit._id);
+    deleteCell.appendChild(deleteBtn);
+    row.appendChild(deleteCell);
 
-      habits.forEach(habit => {
-        const row = document.createElement("tr");
+    tableBody.appendChild(row);
+  });
+}
 
-        const nameCell = document.createElement("td");
-        nameCell.textContent = habit.name;
-        row.appendChild(nameCell);
+function getDayName(index) {
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  return days[index];
+}
 
-        for (let day = 0; day < 7; day++) {
-          const cell = document.createElement("td");
-          cell.setAttribute("data-label", getDayName(day));
+async function updateProgress(habitId, dayIndex, isDone) {
+  const auth = JSON.parse(localStorage.getItem('auth'));
+  if (!auth?.userId) {
+    alert("Please login again");
+    window.location.href = "login.html";
+    return;
+  }
 
-          const isDone = habit.progress[day];
-          const btnGroup = document.createElement("div");
-          btnGroup.className = "action-btns";
+  try {
+    const response = await fetch(`http://localhost:5000/habits/${habitId}/progress`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        dayIndex, 
+        isDone,
+        userId: auth.userId  // Crucial!
+      })
+    });
 
-          const doneBtn = document.createElement("button");
-          doneBtn.textContent = "✔️";
-          doneBtn.className = "done-btn";
-          doneBtn.onclick = () => updateProgress(habit._id, day, true);
-
-          const notDoneBtn = document.createElement("button");
-          notDoneBtn.textContent = "❌";
-          notDoneBtn.className = "not-done-btn";
-          notDoneBtn.onclick = () => updateProgress(habit._id, day, false);
-
-          btnGroup.appendChild(doneBtn);
-          btnGroup.appendChild(notDoneBtn);
-          cell.appendChild(btnGroup);
-          row.appendChild(cell);
-        }
-
-        const deleteCell = document.createElement("td");
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "🗑️";
-        deleteBtn.className = "delete-btn";
-        deleteBtn.onclick = () => deleteHabit(habit._id);
-        deleteCell.appendChild(deleteBtn);
-        row.appendChild(deleteCell);
-
-        tableBody.appendChild(row);
-      });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Update failed");
     }
 
-    function getDayName(index) {
-      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      return days[index];
+    fetchHabits(); // Refresh data
+  } catch (error) {
+    console.error("Update error:", error);
+    alert(error.message);
+  }
+}
+
+async function deleteHabit(habitId) {
+  const auth = JSON.parse(localStorage.getItem('auth'));
+  if (!confirm("Are you sure you want to delete this habit?")) return;
+
+  try {
+    const response = await fetch(`http://localhost:5000/habits/${habitId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: auth.userId })
+    });
+
+    // First check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(`Server returned: ${text.slice(0, 100)}...`);
     }
 
-    async function updateProgress(habitId, dayIndex, isDone) {
-      try {
-        await fetch(`http://localhost:5000/habits/${habitId}/update`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ dayIndex, isDone })
-        });
-        fetchHabits(); // Refresh the table
-      } catch (error) {
-        console.error("Failed to update progress:", error);
-      }
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || "Delete failed");
     }
 
-    async function deleteHabit(habitId) {
-      const confirmDelete = confirm("Are you sure you want to delete this habit?");
-      if (!confirmDelete) return;
-
-      try {
-        const response = await fetch(`http://localhost:5000/habits/delete/${habitId}`, {
-          method: "DELETE"
-        });
-
-        const result = await response.json();
-        if (response.ok) {
-          alert(result.message);
-          fetchHabits(); // refresh table
-        } else {
-          alert("Delete failed: " + result.message);
-        }
-
-      } catch (err) {
-        console.error("Error deleting habit:", err);
-        alert("Server error while deleting.");
-      }
-    }
-
-    // Initial load
+    alert("Habit deleted successfully");
     fetchHabits();
+  } catch (error) {
+    console.error("Delete error:", error);
+    alert(`Delete failed: ${error.message}`);
+  }
+}
+
+// Favorite Button Handler
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('favorite-btn')) {
+    const habitId = e.target.dataset.id;
+    const auth = JSON.parse(localStorage.getItem('auth'));
+
+    try {
+      const response = await fetch(`http://localhost:5000/habits/${habitId}/favorite`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: auth.userId })
+      });
+
+      if (!response.ok) throw new Error("Failed to toggle favorite");
+      
+      const result = await response.json();
+      e.target.innerHTML = result.isFavorite ? "★" : "☆";
+      e.target.style.color = result.isFavorite ? "gold" : "gray";
+    } catch (error) {
+      console.error("Favorite error:", error);
+      alert(error.message);
+    }
+  }
+});
+// Initial load
+document.addEventListener('DOMContentLoaded', fetchHabits);
+
+    // Favorite button toggle handler
+    document.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('favorite-btn')) {
+        const habitId = e.target.dataset.id;
+        try {
+          const res = await fetch(`http://localhost:5000/habits/${habitId}/favorite`, {
+            method: 'PATCH'
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            e.target.innerHTML = data.isFavorite ? "★" : "☆";
+            e.target.style.color = data.isFavorite ? "gold" : "gray";
+          }
+        } catch (error) {
+          console.error('Error toggling favorite:', error);
+        }
+      }
+    });
   </script>
 
 </body>

@@ -1,42 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Habit Tracker</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Login | Habit Tracker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    p {
+      margin-bottom: 25px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border 0.3s;
+    }
+
+    input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-login:hover {
+      background-color: #2980b9;
+    }
+
+    .register-link {
+      margin-top: 15px;
+      display: block;
+      font-size: 14px;
+    }
+
+    .register-link a {
+      color: #f39c12;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .footer b {
+      color: #333;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Habit Tracker App</h1>
-        <h2>Login</h2>
-        <form id="loginForm">
-            <input type="email" id="email" placeholder="Enter your email" required>
-            <input type="password" id="password" placeholder="Enter your password" required>
-            <button type="submit">Login</button>
-        </form>
-        <p>Don't have an account? <a href="register.html">Register here</a></p>
-        <footer>Reuben Cherian</footer>
-    </div>
 
-    <script>
-        document.getElementById("loginForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+  <!-- Keep your existing style tags -->
+<div class="login-container">
+  <h2>Habit Tracker App</h2>
+  <p>Enter your email to continue</p>
 
-            const response = await fetch("http://localhost:5000/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            });
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="your@email.com" required />
+    <button type="submit" class="btn-login">Continue</button>
+  </form>
 
-            const data = await response.json();
-            alert(data.message);
-            if (response.status === 200) {
-                window.location.href = "add-habit.html"; // Redirect to dashboard on success
-            }
-        });
-    </script>
+  <div class="footer">
+    <b>Reuben Cherian</b>
+  </div>
+</div>
+
+<script>
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value.trim();
+
+  try {
+    const response = await fetch("http://localhost:5000/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      localStorage.setItem('auth', JSON.stringify({
+        userId: data.userId,
+        email: data.email
+      }));
+      window.location.href = "dashboard.html";
+    } else {
+      throw new Error(data.error || "Login failed");
+    }
+  } catch (error) {
+    alert(error.message);
+  }
+});
+</script>
+  </script>
 </body>
 </html>

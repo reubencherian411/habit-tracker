@@ -24,6 +24,17 @@ const habitRoutes = require("./routes/habits");  // ✅ Add habit tracking route
 app.use("/auth", authRoutes);
 app.use("/habits", habitRoutes); // ✅ Use habit routes
 
+app.use((err, req, res, next) => {
+  console.error('[ERROR]', new Date().toISOString(), err);
+  res.status(err.status || 500).json({
+    success: false,
+    error: process.env.NODE_ENV === 'development' ? {
+      message: err.message,
+      stack: err.stack
+    } : 'Internal server error'
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -4,49 +4,119 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Add Habit - Habit Tracker</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #3886ad, #f7f8f9);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 30px;
+      color: #555;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus {
+      border-color: #2F80ED;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #2F80ED;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1e5bbf;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 13px;
+      color: #999;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Daily Streaks 🔥</h1>
-    <h2>Add Your Habit</h2>
+  <!-- Keep your existing style tags -->
+<div class="container">
+  <h1>Add Your Habit</h1>
+  <input type="text" id="habitInput" placeholder="Enter a habit..." required />
+  <button onclick="addHabit()">Create Habit</button>
+  <footer>Reuben Cherian</footer>
+</div>
 
-    <input type="text" id="habitInput" placeholder="Enter a habit..." required />
-    <button onclick="addHabit()">Create Habit</button>
+<script>
+async function addHabit() {
+  const auth = JSON.parse(localStorage.getItem('auth'));
+  const habitName = document.getElementById("habitInput").value.trim();
 
-    <footer>Reuben Cherian</footer>
-  </div>
+  if (!auth?.userId) {
+    alert("Session expired. Please login again.");
+    window.location.href = "login.html";
+    return;
+  }
 
-  <script>
-    async function addHabit() {
-      const habitName = document.getElementById("habitInput").value.trim();
-      if (!habitName) {
-        alert("Please enter a habit!");
-        return;
-      }
+  try {
+    const response = await fetch("http://localhost:5000/habits/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        name: habitName,
+        userId: auth.userId
+      })
+    });
 
-      try {
-        const response = await fetch("http://localhost:5000/habits/add", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: habitName })
-        });
-
-        const data = await response.json();
-
-        if (data.message) {
-          // Optionally alert: alert(data.message);
-          // Redirect to weekly view
-          window.location.href = "weekly-view.html";
-        } else {
-          alert("Something went wrong. Try again!");
-        }
-
-      } catch (err) {
-        console.error("Error adding habit:", err);
-        alert("Server error!");
-      }
-    }
-  </script>
+    if (!response.ok) throw new Error("Failed to add habit");
+    window.location.href = "weekly-view.html";
+  } catch (error) {
+    alert(error.message);
+  }
+}
+ </script>
 </body>
 </html>

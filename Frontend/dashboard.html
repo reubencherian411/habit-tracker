@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | Habit Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #67b26f, #4ca2cd);
+      height: 100vh;
+      color: #fff;
+    }
+
+    .dashboard {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 30px;
+      font-size: 1rem;
+      color: #e0f7fa;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .dashboard-button {
+      padding: 18px;
+      border: none;
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      backdrop-filter: blur(10px);
+      transition: background 0.3s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    .dashboard-button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-3px);
+    }
+
+    .logout {
+      margin-top: 40px;
+      padding: 12px 24px;
+      background-color: crimson;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .logout:hover {
+      background-color: darkred;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 13px;
+      color: #ddd;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+    <h1>Welcome to Dashboard</h1>
+    <p>What would you like to do today?</p>
+
+    <div class="button-grid">
+      <button class="dashboard-button" onclick="location.href='add-habit.html'">➕ Add Habit</button>
+      <button class="dashboard-button" onclick="location.href='weekly-view.html'">📅 Weekly View</button>
+      <button class="dashboard-button" onclick="location.href='progress.html'">📈 Track Progress</button>
+    </div>
+
+    <button class="logout" onclick="logout()">🚪 Logout</button>
+
+    <footer>Reuben Cherian</footer>
+  </div>
+
+  <script>
+    function logout() {
+      window.location.href = "login.html";
+    }
+  </script>
+
+</body>
+</html>

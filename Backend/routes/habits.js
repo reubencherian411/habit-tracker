@@ -1,56 +1,130 @@
-// routes/habits.js
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Habit = require('../models/habit');
+const User = require('../models/user');
+const authCheck = require('../middleware/auth');
 
-// Add habit
-router.post('/add', async (req, res) => {
+// Middleware to verify userId
+const verifyUser = async (req, res, next) => {
   try {
-    const { name } = req.body;
-    const newHabit = new Habit({ name }); // progress will default to [false, false...]
-    await newHabit.save();
-    res.json({ message: "Habit added successfully" });
-  } catch (error) {
-    console.error("Error adding habit:", error);
-    res.status(500).json({ error: "Failed to add habit" });
-  }
-});
+    const userId = req.query.userId || req.body.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID required" });
+    }
 
-// Get all habits
+    // Verify user exists (using your existing User model)
+    const userExists = await User.exists({ _id: userId });
+    if (!userExists) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({ error: "Authentication check failed" });
+  }
+};
+
+// Apply to all routes
+router.use(verifyUser);
+
+// Get all habits for a user
 router.get('/', async (req, res) => {
   try {
-    const habits = await Habit.find();
+    const habits = await Habit.find({ userId: req.query.userId });
     res.json(habits);
   } catch (error) {
-    console.error("Error fetching habits:", error);
     res.status(500).json({ error: "Failed to fetch habits" });
   }
 });
 
-// Update habit progress
-router.post('/:id/update', async (req, res) => {
+// Add new habit
+router.post('/add', async (req, res) => {
   try {
-    const { dayIndex, isDone } = req.body;
-    const habit = await Habit.findById(req.params.id);
-    habit.progress[dayIndex] = isDone;
-    await habit.save();
-    res.json({ message: "Habit updated" });
+    const { name, userId } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: "Habit name required" });
+    }
+
+    const newHabit = new Habit({
+      name,
+      userId,
+      progress: [false, false, false, false, false, false, false],
+      isFavorite: false
+    });
+
+    await newHabit.save();
+    res.status(201).json(newHabit);
   } catch (error) {
-    res.status(500).json({ error: "Failed to update progress" });
+    res.status(500).json({ 
+      error: "Failed to add habit",
+      details: error.message 
+    });
   }
 });
 
-router.delete('/delete/:id', async (req, res) => {
-  console.log("DELETE route hit with ID:", req.params.id);
+// Update habit progress
+router.patch('/:id/progress', authCheck, async (req, res) => {
   try {
-    const deletedHabit = await Habit.findByIdAndDelete(req.params.id);
-    if (!deletedHabit) {
-      return res.status(404).json({ message: "Habit not found" });
+    const { dayIndex, isDone, userId } = req.body;
+    
+    const habit = await Habit.findOneAndUpdate(
+      { _id: req.params.id, userId },
+      { $set: { [`progress.${dayIndex}`]: isDone } },
+      { new: true }
+    );
+
+    if (!habit) return res.status(404).json({ error: 'Habit not found' });
+    res.json(habit);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// In your DELETE route
+router.delete('/:id', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    // Validate input
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid habit ID" });
     }
-    res.status(200).json({ message: "Habit deleted successfully" });
-  } catch (error) {
-    console.error("Delete Error:", error);
-    res.status(500).json({ message: "Server error" });
+
+    const deletedHabit = await Habit.findOneAndDelete({
+      _id: req.params.id,
+      userId
+    });
+
+    if (!deletedHabit) {
+      return res.status(404).json({ error: "Habit not found" });
+    }
+
+    res.json({ message: "Habit deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message }); // Ensure JSON response
+  }
+});
+
+// Toggle favorite status
+router.patch('/:id/favorite', authCheck, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    const habit = await Habit.findOne({ _id: req.params.id, userId });
+    if (!habit) return res.status(404).json({ error: 'Habit not found' });
+
+    habit.isFavorite = !habit.isFavorite;
+    await habit.save();
+    
+    res.json({ 
+      success: true,
+      isFavorite: habit.isFavorite 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

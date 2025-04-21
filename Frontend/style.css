@@ -171,3 +171,15 @@ td select:focus {
   background-color: #4caf50;
   transition: width 0.5s ease-in-out;
 }
+
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.favorite-btn:hover {
+  color: orange;
+}

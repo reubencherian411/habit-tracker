@@ -2,26 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Progress Summary</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Weekly Progress Summary</title>
   <style>
     body {
       background: url('background.jpg') no-repeat center center/cover;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       font-family: Arial, sans-serif;
       margin: 0;
+      padding: 20px;
     }
 
     .summary-container {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 40px;
+      background: rgba(255, 255, 255, 0.94);
+      padding: 30px;
       border-radius: 15px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
       text-align: center;
-      max-width: 600px;
+      max-width: 800px;
       width: 90%;
     }
 
@@ -30,25 +30,38 @@
       margin-bottom: 20px;
     }
 
-    .summary-box {
-      font-size: 18px;
-      margin-bottom: 20px;
+    .habit-container {
+      margin: 25px 0;
+      text-align: left;
     }
 
-    #progress-bar-container {
+    .habit-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .progress-bar-container {
       width: 100%;
-      height: 25px;
-      background-color: #e0e0e0;
-      border-radius: 10px;
+      height: 15px;
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      margin: 5px 0;
       overflow: hidden;
-      margin-bottom: 20px;
     }
 
-    #progress-bar-fill {
+    .progress-bar-fill {
       height: 100%;
-      width: 0;
-      background-color: #4caf50;
-      transition: width 0.5s ease-in-out;
+      background-color: #4CAF50;
+      border-radius: 8px;
+      transition: width 0.5s ease;
+    }
+
+    .habit-stats {
+      font-size: 0.85em;
+      color: #666;
+      margin-top: 3px;
     }
 
     button {
@@ -59,30 +72,98 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 5px;
     }
 
     button:hover {
       background: darkred;
     }
+
+    button.dashboard-btn {
+      background-color: #3498db;
+    }
+
+    button.dashboard-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 <body>
   <div class="summary-container">
-    <h1>Habit Progress Summary</h1>
-    
-    <div id="progress" class="summary-box">
-      <!-- Summary will be dynamically loaded here -->
+    <h1>Weekly Habit Progress</h1>
+    <div id="habits-progress-container">
+      <!-- Habit progress will be loaded here -->
     </div>
 
-    <div id="progress-bar-container">
-      <div id="progress-bar-fill"></div>
-    </div>
-
-    <div style="margin-top: 20px;">
+    <div class="buttons-container">
       <button onclick="location.href='weekly-view.html'">Back to Weekly View</button>
+      <button onclick="location.href='dashboard.html'" class="dashboard-btn">Go to Dashboard</button>
     </div>
   </div>
 
-  <script src="progress.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const auth = JSON.parse(localStorage.getItem('auth'));
+        if (!auth?.userId) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        const response = await fetch(`http://localhost:5000/habits?userId=${auth.userId}`);
+        if (!response.ok) throw new Error('Failed to fetch habits');
+        
+        const habits = await response.json();
+        renderWeeklyProgress(habits);
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to load progress data");
+      }
+    });
+
+    function renderWeeklyProgress(habits) {
+      const container = document.getElementById('habits-progress-container');
+      if (!container) return;
+
+      // Get current week's days (Sunday to Saturday)
+      const now = new Date();
+      const currentDayOfWeek = now.getDay(); // 0 (Sunday) to 6 (Saturday)
+      const daysPassedThisWeek = 7;
+
+      container.innerHTML = habits.map(habit => {
+        // Calculate weekly progress
+        const weeklyProgress = Object.entries(habit.progress || {})
+          .filter(([dayIndex]) => dayIndex < daysPassedThisWeek)
+          .filter(([, completed]) => completed)
+          .length;
+
+        const completionPercent = Math.round((weeklyProgress / daysPassedThisWeek) * 100);
+
+        return `
+          <div class="habit-container">
+            <div class="habit-name">
+              <span>${habit.name}</span>
+              <span>${completionPercent}%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" style="width: ${completionPercent}%"></div>
+            </div>
+            <div class="habit-stats">
+              ${weeklyProgress} of ${daysPassedThisWeek} days completed this week
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
 </body>
 </html>
